@@ -1,0 +1,10 @@
+<html>
+<body>
+    <h1>{{ item.name }}</h1>
+    <p>{{ item.description }}</p>
+    <p>Price: ${{ item.price }}</p>
+    <form action="{% url 'trades:get_checkout_session' item.id %}" method="GET">
+        <button type="submit">Buy</button>
+    </form>
+</body>
+</html>
