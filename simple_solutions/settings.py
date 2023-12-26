@@ -28,6 +28,8 @@ DEBUG = os.getenv("DEBUG", "").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLIC_KEY_EURO = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_PUBLIC_KEY_USD = os.getenv("STRIPE_PUBLIC_KEY")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

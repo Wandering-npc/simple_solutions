@@ -1,10 +1,25 @@
 <html>
+<head>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
 <body>
     <h1>{{ item.name }}</h1>
     <p>{{ item.description }}</p>
-    <p>Price: ${{ item.price }}</p>
-    <form action="{% url 'trades:get_checkout_session' item.id %}" method="GET">
-        <button type="submit">Buy</button>
-    </form>
+    <p>{{ item.price }} {{ item.currency }} </p>
+    <button type="button" id="buy-button">Buy</button>
+    <script type="text/javascript">
+        var buyButton = document.getElementById('buy-button');
+        buyButton.addEventListener("click", () => {
+            fetch('{% url 'trades:get_checkout_session' item.id %}', { method: 'GET' })
+                .then((result) => { return result.json(); })
+                .then((data) => {
+                    const stripe = Stripe(data.stripe_config.publicKey);
+                    return stripe.redirectToCheckout({ sessionId: data.session_id });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
 </body>
 </html>
