@@ -1,7 +1,10 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.http import JsonResponse
 import stripe
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from django.http import JsonResponse
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 
 from trades.models import Item, Order, OrderItem
 
@@ -82,5 +85,35 @@ def add_to_order(request, item_id):
     order_item, created = OrderItem.objects.get_or_create(order=order, item=item)
     order_item.quantity += 1
     order_item.save()
+    request.session['order_id'] = order.id
+    messages.success(request, f'Товар успешно добавлен к заказу.')
     return redirect('trades:item_list')
 
+
+@csrf_exempt
+def create_payment_session(request):
+    order_id = request.session.get('order_id')
+    order = get_object_or_404(Order, id=order_id, customer=request.user, is_paid=False)
+    # Создание сессии оплаты с использованием Stripe API
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': order.tax.currency,
+                'product_data': {
+                    'name': f'Order {order.id}',
+                },
+                'unit_amount': int(order.get_total_cost() * 100),
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url=request.build_absolute_uri(f'/success?session_id={{CHECKOUT_SESSION_ID}}'),
+        cancel_url=request.build_absolute_uri(f'/cancel'),
+    )
+
+    # Обновление заказа с идентификатором сессии Stripe
+    order.stripe_session_id = session.id
+    order.save()
+
+    return JsonResponse({'session_id': session.id})

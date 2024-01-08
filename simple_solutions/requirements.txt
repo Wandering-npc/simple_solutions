@@ -2,7 +2,10 @@ asgiref==3.7.2
 certifi==2023.11.17
 charset-normalizer==3.3.2
 Django==4.2.8
+generics==6.0.0
+gunicorn==20.1.0
 idna==3.6
+psycopg2-binary==2.9.9
 python-dotenv==1.0.0
 requests==2.31.0
 sqlparse==0.4.4
@@ -10,3 +13,4 @@ stripe==7.10.0
 typing_extensions==4.9.0
 tzdata==2023.3
 urllib3==2.1.0
+django-cors-headers==4.3.1

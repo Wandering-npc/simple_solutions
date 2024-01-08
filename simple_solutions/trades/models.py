@@ -91,6 +91,7 @@ class Order(models.Model):
         - get_total_cost: Возвращает общую стоимость заказа.
         - __str__: Возвращает строковое представление заказа.
     """
+    stripe_session_id = models.CharField(max_length=50, blank=True, null=True)
     customer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

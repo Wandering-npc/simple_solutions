@@ -39,7 +39,15 @@ STRIPE_PUBLIC_KEY_USD = os.getenv("STRIPE_PUBLIC_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8081',]
+                        # '127.0.0.1:8081',
+                        # '127.0.0.1',]
+# CORS_ALLOWED_ORIGINS = [
+#     "*",
+#     "http://127.0.0.1:8081",
+#     'localhost',
+# ]
 
 
 # Application definition
@@ -52,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'simple_solutions.urls'
@@ -88,6 +98,13 @@ WSGI_APPLICATION = 'simple_solutions.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE',
@@ -145,3 +162,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# ORDER_SESSION_ID = 'order'

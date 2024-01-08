@@ -4,42 +4,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Товары</title>
-    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <h1>Товары</h1>
     <ul>
         {% for item in items %}
             <li>
-                <h2>{{ item.name }}</h2>
+                <h2><a href="{% url 'trades:item_detail' item_id=item.id %}">{{ item.name }}</a></h2>
                 <p>{{ item.description }}</p>
                 <p>Цена: {{ item.price }} {{ item.currency }}</p>
                 <a href="{% url 'trades:add_to_order' item.id %}">Добавить к заказу</a>
             </li>
         {% endfor %}
     </ul>
-    <form action="{% url 'trades:create_order' %}" method="post">
-        {% csrf_token %}
-        <button type="submit" id="checkout-button">Сделать заказ</button>
-    </form>
-    <script type="text/javascript">
-        var checkoutButton = document.getElementById('checkout-button');
-        checkoutButton.addEventListener("click", () => {
-            fetch('{% url 'trades:get_checkout_session' order.id %}', {method: 'GET'})
-            .then((result) => { return result.json(); })
-            .then((data) => {
-                const stripe = Stripe(data.stripe_config.publicKey);
-                return stripe.redirectToCheckout({sessionId: data.session_id});
-            })
-            .then((result) => {
-                if (result.error) {
-                    alert(result.error.message);
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
+<button type="button" id="checkout-button" data-order-id="{{ order_id }}">Сделать заказ</button>
 </body>
 </html>

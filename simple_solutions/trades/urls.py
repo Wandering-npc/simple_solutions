@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import get_checkout_session, item_detail, item_list, add_to_order
+from .views import get_checkout_session, item_detail, item_list, add_to_order, create_payment_session
 
 app_name  = 'trades'
 
@@ -8,4 +8,5 @@ urlpatterns = [
     path('item/<int:item_id>/', item_detail, name='item_detail'),
     path('items/', item_list, name='item_list'),
     path('add_to_order/<int:item_id>/', add_to_order, name='add_to_order'),
+    path('create_payment_session/', create_payment_session, name='create_payment_session'),
 ]
