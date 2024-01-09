@@ -18,22 +18,19 @@
             </li>
         {% endfor %}
     </ul>
-    <div id="payment-button-container">
-        <a href="{% url 'trades:create_payment_session' order_id %}"><button>Оплатить</button></a>
-    </div>
+    <button type="button" id="buy-button">Оплатить</button>
     <script type="text/javascript">
-        var stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
-        document.getElementById('payment-button-container').addEventListener('click', function() {
-            fetch('{% url 'trades:create_payment_session' order_id %}', {
-                method: 'GET',
-            })
-            .then(response => response.json())
-            .then(session => {
-                stripe.redirectToCheckout({ sessionId: session.session_id });
-            })
-            .catch(error => {
-                console.error('Error creating payment session:', error);
-            });
+        var buyButton = document.getElementById('buy-button');
+        buyButton.addEventListener("click", () => {
+            fetch('{% url 'trades:create_payment_session' %}', { method: 'GET' })
+                .then((result) => { return result.json(); })
+                .then((data) => {
+                    const stripe = Stripe(data.stripe_key);
+                    return stripe.redirectToCheckout({ sessionId: data.session_id });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
         });
     </script>
 </body>

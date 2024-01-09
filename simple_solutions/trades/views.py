@@ -67,10 +67,10 @@ def item_list(request):
     :param request: объект запроса Django
     :return: объект ответа Django с списком товаров
     """
-    order_id = request.session.get('order_id')
+    # order_id = request.session.get('order_id')
     items = Item.objects.all()
-    return render(request, 'trades/item_list.html', {'items': items,
-                                                     'order_id': order_id})
+    return render(request, 'trades/item_list.html', {'items': items,})
+                                                    #  'order_id': order_id})
 
 def add_to_order(request, item_id):
     """
@@ -105,21 +105,45 @@ def create_payment_session(request):
         )
         order.payment_intent_id = intent.id
         order.save()
+        tax = stripe.TaxRate.create(
+            display_name=order.tax.name,
+            inclusive=False,  
+            percentage=order.tax.value,
+        )
+        order.tax.stripe_id = tax.id
+        order.tax.save()
+        coupon = stripe.Coupon.create(
+            duration="once",
+            # id="free-period",
+            percent_off=order.discount.percent_off,
+        )
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
                 'price_data': {
-                    'currency': 'usd',  # Укажите валюту вашего заказа
+                    'currency': 'usd',  
                     'product_data': {
                         'name': f'Order {order.id}',
                     },
                     'unit_amount': int(order.get_total_cost() * 100),
                 },
                 'quantity': 1,
+                'tax_rates': [tax.id] if order.tax else [],
             }],
             mode='payment',
             success_url=request.build_absolute_uri(f'/success?session_id={{CHECKOUT_SESSION_ID}}'),
             cancel_url=request.build_absolute_uri(f'/cancel'),
-            payment_intent=intent.id  # Передаем идентификатор платежного намерения
+            discounts=[{
+                'coupon': coupon.id,
+            }],
+            payment_intent_data={
+                'description': 'Оплата заказа',
+                'metadata': {
+                'order_id': order.id,
+                }
+            }
         )
-        return JsonResponse({'session_id': session.id})
+        return JsonResponse({
+            'session_id': session.id,
+            'stripe_key': settings.STRIPE_PUBLIC_KEY_USD
+        })

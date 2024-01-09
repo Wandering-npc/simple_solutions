@@ -91,7 +91,7 @@ class Order(models.Model):
         - get_total_cost: Возвращает общую стоимость заказа.
         - __str__: Возвращает строковое представление заказа.
     """
-    stripe_session_id = models.CharField(max_length=50, blank=True, null=True)
+    # stripe_session_id = models.CharField(max_length=50, blank=True, null=True)
     customer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -113,7 +113,7 @@ class Order(models.Model):
     payment_intent_id = models.CharField(max_length=100, blank=True, null=True)
 
     def get_total_cost(self):
-        return sum(item_order.get_cost() for item_order in self.items.all())
+        return sum(item_order.get_cost() for item_order in self.order_items.all())
 
     def __str__(self):
         return str(self.id)
@@ -137,7 +137,7 @@ class OrderItem(models.Model):
         on_delete=models.CASCADE)
     item = models.ForeignKey(
         Item,
-        related_name='order_items',
+        related_name='item_orders',
         on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
 
