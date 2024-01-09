@@ -110,6 +110,7 @@ class Order(models.Model):
         null=True,
         blank=True,
         on_delete=models.CASCADE)
+    payment_intent_id = models.CharField(max_length=100, blank=True, null=True)
 
     def get_total_cost(self):
         return sum(item_order.get_cost() for item_order in self.items.all())

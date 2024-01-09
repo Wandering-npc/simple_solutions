@@ -67,8 +67,10 @@ def item_list(request):
     :param request: объект запроса Django
     :return: объект ответа Django с списком товаров
     """
+    order_id = request.session.get('order_id')
     items = Item.objects.all()
-    return render(request, 'trades/item_list.html', {'items': items})
+    return render(request, 'trades/item_list.html', {'items': items,
+                                                     'order_id': order_id})
 
 def add_to_order(request, item_id):
     """
@@ -93,27 +95,31 @@ def add_to_order(request, item_id):
 @csrf_exempt
 def create_payment_session(request):
     order_id = request.session.get('order_id')
-    order = get_object_or_404(Order, id=order_id, customer=request.user, is_paid=False)
-    # Создание сессии оплаты с использованием Stripe API
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items=[{
-            'price_data': {
-                'currency': order.tax.currency,
-                'product_data': {
-                    'name': f'Order {order.id}',
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'GET':
+        # Создаем платежное намерение
+        intent = stripe.PaymentIntent.create(
+            amount=int(order.get_total_cost() * 100),
+            currency='usd',
+            metadata={'order_id': order.id}
+        )
+        order.payment_intent_id = intent.id
+        order.save()
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',  # Укажите валюту вашего заказа
+                    'product_data': {
+                        'name': f'Order {order.id}',
+                    },
+                    'unit_amount': int(order.get_total_cost() * 100),
                 },
-                'unit_amount': int(order.get_total_cost() * 100),
-            },
-            'quantity': 1,
-        }],
-        mode='payment',
-        success_url=request.build_absolute_uri(f'/success?session_id={{CHECKOUT_SESSION_ID}}'),
-        cancel_url=request.build_absolute_uri(f'/cancel'),
-    )
-
-    # Обновление заказа с идентификатором сессии Stripe
-    order.stripe_session_id = session.id
-    order.save()
-
-    return JsonResponse({'session_id': session.id})
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri(f'/success?session_id={{CHECKOUT_SESSION_ID}}'),
+            cancel_url=request.build_absolute_uri(f'/cancel'),
+            payment_intent=intent.id  # Передаем идентификатор платежного намерения
+        )
+        return JsonResponse({'session_id': session.id})
