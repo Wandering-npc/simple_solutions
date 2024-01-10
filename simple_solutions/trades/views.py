@@ -105,18 +105,20 @@ def create_payment_session(request):
         )
         order.payment_intent_id = intent.id
         order.save()
-        tax = stripe.TaxRate.create(
-            display_name=order.tax.name,
-            inclusive=False,  
-            percentage=order.tax.value,
-        )
-        order.tax.stripe_id = tax.id
-        order.tax.save()
-        coupon = stripe.Coupon.create(
-            duration="once",
-            # id="free-period",
-            percent_off=order.discount.percent_off,
-        )
+        if order.tax:
+            tax = stripe.TaxRate.create(
+                display_name=order.tax.name,
+                inclusive=False,
+                percentage=order.tax.value,
+            )
+            order.tax.stripe_id = tax.id
+            order.tax.save()
+        if order.discount:
+            coupon = stripe.Coupon.create(
+                duration="once",
+                # id="free-period",
+                percent_off=order.discount.percent_off,
+            )
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -134,7 +136,7 @@ def create_payment_session(request):
             success_url=request.build_absolute_uri(f'/success?session_id={{CHECKOUT_SESSION_ID}}'),
             cancel_url=request.build_absolute_uri(f'/cancel'),
             discounts=[{
-                'coupon': coupon.id,
+                'coupon': coupon.id if order.discount else None,
             }],
             payment_intent_data={
                 'description': 'Оплата заказа',
